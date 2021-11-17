@@ -4,6 +4,7 @@ import com.habr.cron.Cron;
 import com.habr.cron.CronBase;
 
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 
@@ -136,14 +137,13 @@ public class Schedule implements Cron
 
     /**
      * Makes events generator.
-     * TODO: test it
      */
     private final class EventsGenerator implements ScheduleEventsGenerator
     {
         // mutable objects
         private final GregCalendar calendar;
         private final CalendarDigits digits;
-        private Date date;
+        private Date date = null;
 
         public EventsGenerator(Date start, SearchMode mode)
         {
@@ -155,19 +155,24 @@ public class Schedule implements Cron
                 digits.next();
             }
 
-            date = fixWeekDay(digits, calendar);
+            // don't do it; next() calls it first
+            // fixWeekDay(digits, calendar);
         }
 
         public Date last()
         {
             return date;
-        }
+        } // for first call returns null
 
         public Date next()
         {
+            date = fixWeekDay(digits, calendar); // fix date for previous result
+
+            // prepare to calculate the next result
             digits.gotoLastDigit();
             digits.increment();
-            return date = fixWeekDay(digits, calendar);
+
+            return date; // return fixed previous result
         }
 
         public String schedule()
@@ -293,7 +298,7 @@ public class Schedule implements Cron
         do
         {
             if ( !digits.hasNext(year) )
-                throw new IllegalStateException(); // we went beyond the schedule
+                throw new IllegalStateException("Out of schedule interval"); // we went beyond the schedule
 
             year = digits.getNext(year);
             byte yearMap = GregCalendar.isLeap(year) == 1 ? ly : ny;

@@ -25,24 +25,24 @@ public class Benchmark
             long nanos;
 
 
-            cron = new com.habr.cron.novar.Schedule(schedule);
-            nanos = runCronBenchmark(cron, date);
-            System.out.println(
-                    String.format("[NoVar] %s %s  - %d nsec",
-                            schedule,
-                            data[1],
-                            nanos)
-            );
+//            cron = new com.habr.cron.novar.Schedule(schedule);
+//            nanos = runCronBenchmark(cron, date);
+//            System.out.println(
+//                    String.format("[NoVar] %s %s  - %d nsec",
+//                            schedule,
+//                            data[1],
+//                            nanos)
+//            );
 
 
-            cron = new com.habr.cron.ilya.Schedule(schedule);
-            nanos = runCronBenchmark(cron, date);
-            System.out.println(
-                    String.format("[Ilya] %s %s  - %d nsec",
-                            schedule,
-                            data[1],
-                            nanos)
-            );
+//            cron = new com.habr.cron.ilya.Schedule(schedule);
+//            nanos = runCronBenchmark(cron, date);
+//            System.out.println(
+//                    String.format("[Ilya] %s %s  - %d nsec",
+//                            schedule,
+//                            data[1],
+//                            nanos)
+//            );
 
 
             cron = new com.habr.cron.dev.Schedule(schedule);
@@ -85,6 +85,10 @@ public class Benchmark
 
             // очень сложная дата для всех алгоритмов: ожидается 29.02.2048 12:00:00
             {"*.02.29 6 12:00:00",               "2021.01.01 12:00:00.000"},
+
+            // complexity schedule; expected 30.04.2021 12:14:34.000
+            {"*.*.20-32/5 5 12:14:34",              "2021.01.31 12:14:33.177"},
+
     };
 
 }

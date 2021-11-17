@@ -27,7 +27,7 @@ public class MeasureTimes
 //        plotTimes(ilya, date, (int) TimeUnit.DAYS.toSeconds(31), 300, 10000);
 
         Cron dev = new com.habr.cron.dev.Schedule("*/4.01.01 12:00:00.000");
-        plotTimes(dev, date, (int) TimeUnit.DAYS.toSeconds(31), 300, 50000);
+        plotTimes(dev, date, (int) TimeUnit.HOURS.toSeconds(1), 300, 50000);
     }
 
 
