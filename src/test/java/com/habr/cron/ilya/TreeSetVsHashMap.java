@@ -5,7 +5,7 @@ import java.util.Random;
 
 
 /**
- * Сравниваем скорость работы матчеров: TreeMatch и HashMapMatcher
+ * Сравниваем скорость работы матчеров: TreeMatcher и HashMapMatcher
  * при одинаковых условиях работы.
  * По результатам теста: HashMap уделывает TreeMap: 13ns/53ns по всем тестам
  */

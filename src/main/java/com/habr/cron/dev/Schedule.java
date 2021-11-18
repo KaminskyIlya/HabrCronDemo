@@ -143,12 +143,13 @@ public class Schedule implements Cron
         // mutable objects
         private final GregCalendar calendar;
         private final CalendarDigits digits;
-        private Date date = null;
+        private Date date;
 
         public EventsGenerator(Date start, SearchMode mode)
         {
             calendar = new GregCalendar(start, UTC);
             digits = new CalendarDigits(pool, calendar, mode.toZero());
+            date = start;
 
             while ( isCanSearchDown(digits, calendar, mode.canEqual()) )
             {
@@ -162,7 +163,7 @@ public class Schedule implements Cron
         public Date last()
         {
             return date;
-        } // for first call returns null
+        } // for first call returns 'start'
 
         public Date next()
         {

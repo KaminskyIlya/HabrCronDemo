@@ -3,13 +3,11 @@ package com.habr.cron.ilya;
 import java.util.Random;
 
 /**
- * Сравниваем скорость работы матчеров: TreeMatch и HashMapMatcher
+ * Сравниваем скорость работы матчеров: TreeMatcher и BitMapMatcher
  * при одинаковых условиях работы.
- * По результатам теста: BitMap уделывает при поиске TreeMap во всех диапазонах:
- *  когда у нас элементов 1/1000 - 45ns против 47ns
+ * По результатам теста: BitMap уделывает при поиске TreeMap почти во всех диапазонах свыше 5%:
  *  когда у нас элементов 50/1000 - 39ns против 59ns
- *  когда у нас элементов 200/1000 - 33ns против62ns
- * Причем скорость поиска всегда остается на хорошем уровне 13-15ns против 34ns
+ *  когда у нас элементов 200/1000 - 33ns против 62ns
  */
 public class TreeSetVsBitMap
 {
@@ -20,7 +18,7 @@ public class TreeSetVsBitMap
 
     static final Range range = new Range(0, 1000);
     static TreeMatcher tree;
-    static BitMapMatcher hash;
+    static BitMapMatcher bits;
     static Random random;
 
 
@@ -29,7 +27,7 @@ public class TreeSetVsBitMap
         random = new Random(SEED);
 
         tree = new TreeMatcher(range.min, range.max);
-        hash = new BitMapMatcher(range.min, range.max);
+        bits = new BitMapMatcher(range.min, range.max);
 
         // заполним оба чекера случаными расписаниями
         fillRandomPoints();
@@ -38,11 +36,11 @@ public class TreeSetVsBitMap
         showExpectedValues(range);
 
         // тест на проверку значения match
-        matchBenchmarkTest("Проверка скорости выборки hashMap", hash);
+        matchBenchmarkTest("Проверка скорости выборки bitMap", bits);
         matchBenchmarkTest("Проверка скорости выборки treeSet", tree);
 
         // тест на поиск следующего значения next
-        majorBenchmarkTest("Проверка скорости поиска hashMap", hash);
+        majorBenchmarkTest("Проверка скорости поиска bitMap", bits);
         majorBenchmarkTest("Проверка скорости поиска treeSet", tree);
     }
 
@@ -88,13 +86,13 @@ public class TreeSetVsBitMap
             int v = (int)(random.nextFloat() * range.max);
 
             tree.addRange(v, v, 1);
-            hash.addRange(v, v, 1);
+            bits.addRange(v, v, 1);
         }
     }
 
     private static void showExpectedValues(Range range)
     {
-        int c1 = countRealPoints(hash);
+        int c1 = countRealPoints(bits);
         int c2 = countRealPoints(tree);
 
         if ( c1 != c2 ) throw new AssertionError();
