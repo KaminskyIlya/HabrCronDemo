@@ -1,9 +1,12 @@
 package com.habr.cron.dev;
 
+import static com.habr.cron.dev.ScheduleElements.FEBRUARY_LEAP_DAY;
+import static com.habr.cron.dev.ScheduleElements.LAST_DAY_OF_MONTH_CODE;
+
 /**
  * Proxy-matcher for days, then in condition used single magic day ',32,'
  * (makes proxy for 'HashMapMatcher')
- * Unmodified object. Thread-safe.
+ * Not thread-safe, because it uses mutable calendar.
  */
 class LastDayOfMonthProxy implements DigitMatcher
 {
@@ -21,13 +24,13 @@ class LastDayOfMonthProxy implements DigitMatcher
         int min = matcher.getLow();
         int max = matcher.getHigh();
 
-        if ( min < max && max < 29 )
+        if ( min < max && max < FEBRUARY_LEAP_DAY )
             return matcher.match(value);
 
 
         int actualMax = calendar.getMaxDay();
 
-        if ( min == max && max == 32 ) // it's a magic day
+        if ( min == max && max == LAST_DAY_OF_MONTH_CODE ) // it's a magic day
         {
             return value == actualMax;
         }
@@ -41,6 +44,8 @@ class LastDayOfMonthProxy implements DigitMatcher
 
     public int getNext(int value)
     {
+        //TODO: выяснить, почему getNext не симметричен getPrev?
+
         int actualMax = calendar.getMaxDay();
         if ( value < getHigh() ) // value in range 1..27
         {
@@ -49,7 +54,21 @@ class LastDayOfMonthProxy implements DigitMatcher
             return next < actualMax ? next : actualMax;
         }
         else // value in range 28..31
-            return 32; // return overflow (for any month)
+            return 31 + 1; // return overflow (for any month)
+
+/*        int actualMax = calendar.getMaxDay();
+        if ( value < getHigh() ) // value in range 1..27
+        {
+            do
+            {
+                value = matcher.getNext(value);
+            }
+            while ( value <= actualMax && !match(value) );
+
+            return value;
+        }
+        else // value in range 28..31
+            return 31 + 1; // return overflow (for any month)*/
     }
 
     public int getPrev(int value)
@@ -57,11 +76,16 @@ class LastDayOfMonthProxy implements DigitMatcher
         int actualMax = calendar.getMaxDay();
         if ( value > getLow() )
         {
-            int prev = matcher.getPrev(value);
-            return prev < actualMax ? prev : actualMax;
+            do
+            {
+                value = matcher.getPrev(value);
+            }
+            while ( value > actualMax );
+
+            return value;
         }
-        else 
-            return -1;
+        else
+            return -1; // return overflow (for any month)
     }
 
     public boolean hasNext(int value)
