@@ -15,7 +15,6 @@ import java.util.Random;
  */
 public class IntervalListVsBitMap
 {
-    private final static int POINTS_COUNT = 800; //20%
     private final static long SEED = 1L;
     private final static int LOOP_COUNT = 10000000;
 
@@ -24,6 +23,7 @@ public class IntervalListVsBitMap
     static ListOfIntervalMatcher list;
     static BitMapMatcher bits;
     static Random random;
+    static RangeList ranges;
 
 
     public static void main(String args[]) throws Exception
@@ -82,19 +82,19 @@ public class IntervalListVsBitMap
 
     private static void fillPredefinedIntervals()
     {
-        // 1-10,12-18,21-30,941-1000
-        list = new ListOfIntervalMatcher(4); // положим, что у нас только 4 интервала
+        ranges = new RangeList(2); // положим, что у нас только 4 интервала
+        ranges.add(new Range(1, 500));
+        ranges.add(new Range(601, 1000));
+//        ranges.add(new Range(201, 299));
+//        ranges.add(new Range(300, 400));
+//        ranges.add(new Range(600, 700));
+//        ranges.add(new Range(900, 1000));
+
+        list = new ListOfIntervalMatcher(ranges.getCount());
         bits = new BitMapMatcher(range.min, range.max);
 
-        bits.addRange(1, 10, 1);
-        bits.addRange(12, 18, 1);
-        bits.addRange(21, 30, 1);
-        bits.addRange(941, 1000, 1);
-
-        list.addRange(1, 10, 1);
-        list.addRange(12, 18, 1);
-        list.addRange(21, 30, 1);
-        list.addRange(941, 1000, 1);
+        setRanges(list, ranges);
+        setRanges(bits, ranges);
 
         /*for (int i = 0; i < POINTS_COUNT; i++)
         {
@@ -103,9 +103,15 @@ public class IntervalListVsBitMap
             list.addRange(v, v, 1);
             bits.addRange(v, v, 1);
         }*/
+    }
 
-        bits.finishRange();
-        list.finishRange();
+    private static void setRanges(MapMatcher matcher, RangeList ranges)
+    {
+        for (Range range : ranges)
+        {
+            matcher.addRange(range.min, range.max, range.step);
+        }
+        matcher.finishRange();
     }
 
     private static void showExpectedValues(Range range)
@@ -116,14 +122,12 @@ public class IntervalListVsBitMap
         if ( c1 != c2 ) throw new AssertionError();
 
         float mean = ((float)c1) / range.max;
-
         int loops = (int)(1f / mean);
-        int nodes = (int)(Math.log(c1) / Math.log(2));
 
-        System.out.println("Длина диапазона: " + range);
+        System.out.println("Диапазон: " + ranges);
         System.out.println("Кол-во точек: " + c1 + " (" + mean*100 + "%)");
         System.out.println("Среднее кол-во итераций цикла на поиск значения: " + loops);
-        System.out.println("Максимальное кол-во узлов дерева на поиск значения: " + nodes);
+        System.out.println("Количество диапазонов: " + ranges.getCount());
     }
 
     private static int countRealPoints(DigitMatcher matcher)

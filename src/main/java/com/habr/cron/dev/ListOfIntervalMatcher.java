@@ -1,8 +1,5 @@
 package com.habr.cron.dev;
 
-import com.habr.cron.dev.*;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 /**
  * NOTE: This was a concept of class. Used in benchmark only.
  * The concept was suggested by the user @mayorovp in https://habr.com/ru/post/589667/comments/#comment_23717693
@@ -11,10 +8,10 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  * и не пересекаются.
  *
  */
-class ListOfIntervalMatcher implements DigitMatcher, com.habr.cron.dev.MapMatcher
+class ListOfIntervalMatcher implements DigitMatcher, MapMatcher
 {
     /**
-     * Arrays of intervals
+     * Arrays of intervals bounds
      */
     private final int[] min;
     private final int[] max;
@@ -38,7 +35,7 @@ class ListOfIntervalMatcher implements DigitMatcher, com.habr.cron.dev.MapMatche
     /**
      * Trying to search the interval that contains a value
      *
-     * @return index of interval or -1 (NOT_FOUND), if not found
+     * @return index of interval or -1 (NOT_FOUND)
      */
     private int search(int value)
     {
@@ -83,7 +80,7 @@ class ListOfIntervalMatcher implements DigitMatcher, com.habr.cron.dev.MapMatche
         if ( index < LAST )
             return min[index+1];
 
-        throw new AssertionError("This code MUST not be reachable!");
+        return value+1; // this should not happen if you call hasNext() before
     }
 
     public int getPrev(int value)
@@ -94,9 +91,9 @@ class ListOfIntervalMatcher implements DigitMatcher, com.habr.cron.dev.MapMatche
             return value - 1;
 
         if ( index > FIRST )
-            return min[index-1];
+            return min[index-1];//ошибка здесь, написать на неё тест
 
-        throw new AssertionError("This code MUST not be reachable!");
+        return value-1; // this should not happen if you call hasPrev() before
     }
 
     public boolean hasNext(int value)
@@ -148,6 +145,6 @@ class ListOfIntervalMatcher implements DigitMatcher, com.habr.cron.dev.MapMatche
 
     public void addValue(int value)
     {
-        throw new NotImplementedException(); // пока одиночные интервалы не поддерживаем
+        throw new UnsupportedOperationException(); // пока одиночные интервалы не поддерживаем
     }
 }

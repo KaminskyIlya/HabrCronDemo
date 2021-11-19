@@ -6,6 +6,8 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class IntervalListTest
 {
@@ -82,5 +84,18 @@ public class IntervalListTest
                 {49, 50},
 //                {50, 51}, // throws Assertion error, it's right
         };
+    }
+
+
+    @Test
+    public void testSpecialCase() throws Exception
+    {
+        ListOfIntervalMatcher matcher = new ListOfIntervalMatcher(1);
+        matcher.addRange(5, 5, 1);
+        matcher.finishRange();
+
+        assertTrue(matcher.match(5));
+        assertFalse(matcher.match(4));
+        assertFalse(matcher.match(6));
     }
 }

@@ -32,6 +32,11 @@ final class RangeList implements Iterable<Range>
         list[count++] = range;
     }
 
+    public int getCount()
+    {
+        return list.length;
+    }
+
 
     /**
      * @return true, if it is single range
