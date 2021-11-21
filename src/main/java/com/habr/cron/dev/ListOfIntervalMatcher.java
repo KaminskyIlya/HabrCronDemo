@@ -87,7 +87,7 @@ class ListOfIntervalMatcher implements DigitMatcher, MapMatcher
     {
         int index = search(value);
 
-        if ( index != NOT_FOUND && value > min[index] )
+        if ( index != NOT_FOUND && value > min[index] )//тщательно проверить и эти случаи (когда диапазон из одной цифры)
             return value - 1;
 
         if ( index > FIRST )
