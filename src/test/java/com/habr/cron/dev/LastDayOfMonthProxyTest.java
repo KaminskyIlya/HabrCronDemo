@@ -1,9 +1,6 @@
 package com.habr.cron.dev;
 
-import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import java.util.Calendar;
 
 import static org.testng.Assert.*;
 
@@ -98,7 +95,7 @@ public class LastDayOfMonthProxyTest
     }
 
     @Test
-    public void testPrevOnLatAprilDay() throws Exception
+    public void testPrevOnLastAprilDay() throws Exception
     {
         DigitMatcher matcher = new HashMapMatcher(1, 33);
         MapMatcher map = (MapMatcher) matcher;
@@ -112,8 +109,23 @@ public class LastDayOfMonthProxyTest
         LastDayOfMonthProxy proxy = new LastDayOfMonthProxy(matcher, calendar);
 
         assertTrue(matcher.hasPrev(33)); // prev is the 32th
+        assertFalse(proxy.hasPrev(33)); // but 32th is overflow on April; there is no previous value in schedule
         assertEquals(matcher.getPrev(33), 32);
-        assertFalse(proxy.hasPrev(33)); // but 32th is overflow on February; there is no previous value in schedule
+
+        assertTrue(matcher.hasPrev(32));
+        assertFalse(proxy.hasPrev(32));
+
+        assertFalse(proxy.hasPrev(31)); // on low boundary
+        assertFalse(matcher.hasPrev(31));
+
+        assertFalse(proxy.hasPrev(30)); // out of schedule
+        assertFalse(matcher.hasPrev(30));
+
+
+        calendar.month = 5; // May
+        assertTrue(proxy.hasPrev(33)); // now we has previous date:
+        assertEquals(proxy.getPrev(33), 31); // this 31th for May
+
 
         // now let's add another range
         matcher = new HashMapMatcher(1, 33);
@@ -121,6 +133,8 @@ public class LastDayOfMonthProxyTest
         map.addRange(23, 27, 1);
         map.addRange(31, 33, 1); // synthetic range for test only
         map.finishRange();
+
+        calendar.month = 4; // April
 
         proxy = new LastDayOfMonthProxy(matcher, calendar);
         assertTrue(proxy.hasPrev(33)); // now we have previous value

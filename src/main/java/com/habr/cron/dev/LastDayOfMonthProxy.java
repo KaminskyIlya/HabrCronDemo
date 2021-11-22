@@ -44,8 +44,6 @@ class LastDayOfMonthProxy implements DigitMatcher
 
     public int getNext(int value)
     {
-        //TODO: выяснить, почему getNext не симметричен getPrev?
-
         int actualMax = calendar.getMaxDay();
         if ( value < getHigh() ) // value in range 1..27
         {
@@ -55,20 +53,6 @@ class LastDayOfMonthProxy implements DigitMatcher
         }
         else // value in range 28..31
             return 31 + 1; // return overflow (for any month)
-
-/*        int actualMax = calendar.getMaxDay();
-        if ( value < getHigh() ) // value in range 1..27
-        {
-            do
-            {
-                value = matcher.getNext(value);
-            }
-            while ( value <= actualMax && !match(value) );
-
-            return value;
-        }
-        else // value in range 28..31
-            return 31 + 1; // return overflow (for any month)*/
     }
 
     public int getPrev(int value)
