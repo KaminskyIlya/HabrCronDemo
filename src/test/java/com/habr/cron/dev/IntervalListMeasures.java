@@ -1,5 +1,15 @@
 package com.habr.cron.dev;
 
+import org.w3c.dom.css.RGBColor;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.IndexColorModel;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -21,8 +31,11 @@ import java.util.Random;
  */
 public class IntervalListMeasures
 {
-    private final static int LOOP_COUNT = 100000;
-    private static final int MAX_RANGES = 16;
+    private final static int MEASURES_LOOPS = 100000; // кол-во циклов на измерение одной функции
+    private static final int MAX_RANGES = 16; // максимальное число диапазонов
+    private static final int MAX_TRIES_FOR_RANGE = 10; // кол-во попыток измерений для каждого процента заполнения
+    private static final int COVERAGE_MAX_STEPS = 11; // кол-во ступений изменения процента покрытия
+    private static final int GROUPING_MAX_GROUPS = 100; // кол-во групп, по которым смотрим статистику распределения
     private static final int LOW = 0;
     private static final int HIGH = 999;
     private static final int COUNT = HIGH+1;
@@ -30,45 +43,138 @@ public class IntervalListMeasures
     static Random random;
 
 
+    // результат одного бенчмарка
+    private static final class BenchResult implements Comparable<BenchResult>
+    {
+        float ratio;
+        float groups[];
+
+        public BenchResult(Benchmark benchmark)
+        {
+            ratio = benchmark.getMatchRatio() * benchmark.getSearchRatio();
+            groups = benchmark.getGroups100();
+        }
+
+        public int compareTo(BenchResult o)
+        {
+            return ratio < o.ratio ? -1 : 1;
+        }
+    }
+
+    // здесь будем хранить результаты всех измерений для указанного кол-ва диапазона ranges
+    private static  BenchResult results[] = new BenchResult[COVERAGE_MAX_STEPS * MAX_TRIES_FOR_RANGE];
+
+
+
     public static void main(String args[]) throws Exception
     {
         random = new Random(1L);
 
-        System.out.println("ranges;coverage;ratio;grouping");
         for (int ranges = 2; ranges <= MAX_RANGES; ranges++) // увеличиваем кол-во диапазонов до 16-ти
         {
-            for (int values = 10; values < 1000; values += 100 ) // увеличиваем процент заполнения с 1% до 100% с шагом в 10%
-            {
-                for (int tries = 1; tries < 100; tries++)
-                {
-                    Benchmark benchmark = new Benchmark(ranges, values);
-                    benchmark.run();
-
-                    float A = benchmark.getMatchRatio();
-                    float B = benchmark.getSearchRatio();
-
-                    //TODO: сделать вывод в CSV-файл для последующего анализа
-                    System.out.println(
-                            String.format("TEST [%d, %f] match:%f search:%f total:%f schedule:%s grouping:%s",
-//                            String.format("%d;%f;%f;%s",
-                                    ranges,
-                                    benchmark.getCoverage(),
-                                    benchmark.getMatchRatio(),
-                                    benchmark.getSearchRatio(),
-                                    (A + B) / 2,
-                                    benchmark.asSchedule(),
-//                                    benchmark.getMemoryUsage(),
-                                    Arrays.toString(benchmark.getGrouping())
-                                            .replaceAll("[\\[|\\]]", "")
-                                            .replaceAll(",", ";")
-                                            .replaceAll("\\.", ",")
-                            ));
-                }
-            }
+            generateBenchResults(ranges);
+            visualizeBenchResults(ranges);
         }
     }
 
 
+    private static void generateBenchResults(int ranges) throws IOException
+    {
+        File output = new File("out", ranges + ".csv");
+        PrintWriter pw = new PrintWriter(new FileWriter(output, false), true);
+
+        System.out.println("ranges;coverage;match;search;ratio;schedule;groups");
+        pw.println("ranges;ratio;coverage;groups");
+
+
+        // плавно изменяем процент покрытия диапазона значениями (COVERAGE_MAX_STEPS шагов)
+        for (int values = 10, step = 0; values <= 1000; values += 99, step++) // с 1% до 100% с шагом в 9,9%
+        {
+            // делаем по 100 пробных измерений при данном % заполнения
+            for (int tries = 0; tries < MAX_TRIES_FOR_RANGE; tries++)
+            {
+                Benchmark benchmark = new Benchmark(ranges, values);
+                benchmark.run();
+
+                results[step * MAX_TRIES_FOR_RANGE + tries] = new BenchResult(benchmark);
+
+                writeToFile(pw, benchmark);
+                writeToScreen(benchmark);
+            }
+        }
+        pw.close();
+    }
+
+
+    private static void visualizeBenchResults(int ranges) throws IOException
+    {
+        // создаем визуализацию распределения
+        BufferedImage img = new BufferedImage(
+                GROUPING_MAX_GROUPS + 1,
+                COVERAGE_MAX_STEPS * MAX_TRIES_FOR_RANGE,
+                BufferedImage.TYPE_BYTE_GRAY);
+
+        // сортируем результаты так, чтобы ratio убывал
+        Arrays.sort(results);
+
+        // максимальный коэффициент ускорения (из-за сортировки он в самом конце)
+        final float MAX_RATIO = results[results.length-1].ratio;
+
+        for (int step = 0; step < COVERAGE_MAX_STEPS; step++)
+        {
+            for (int tries = 0; tries < MAX_TRIES_FOR_RANGE; tries++)
+            {
+                int y = step * MAX_TRIES_FOR_RANGE + tries;
+                BenchResult result = results[y];
+
+                for (int group = 0; group < GROUPING_MAX_GROUPS; group++)
+                {
+                    int c = (int) (255 * result.groups[group]);
+                    Color color = new Color(c, c, c);
+                    img.setRGB(group, y, color.getRGB());
+                }
+
+                {
+                    int c = (int) (255 * (result.ratio / MAX_RATIO));
+                    Color color = new Color(c, c, c);
+                    img.setRGB(GROUPING_MAX_GROUPS, y, color.getRGB());
+                }
+            }
+        }
+        ImageIO.write(img, "png", new File("out", ranges + ".png"));
+    }
+
+
+    private static void writeToScreen(Benchmark benchmark)
+    {
+        System.out.println(
+                String.format("[%d] coverage:%f match:%f search:%f total:%f schedule:%s grouping:%s",
+                        benchmark.getRanges(),
+                        benchmark.getCoverage(),
+                        benchmark.getMatchRatio(),
+                        benchmark.getSearchRatio(),
+                        benchmark.getMatchRatio() * benchmark.getSearchRatio(),
+                        benchmark.asSchedule(),
+                        Arrays.toString(benchmark.getGrouping())
+                                .replaceAll("[\\[|\\]]", "")
+                                .replaceAll(",", ";")
+                                .replaceAll("\\.", ",")
+                ));
+    }
+
+    private static void writeToFile(PrintWriter pw, Benchmark benchmark)
+    {
+        pw.println(
+                String.format("%d;%f;%f;%s",
+                        benchmark.getRanges(),
+                        benchmark.getMatchRatio() * benchmark.getSearchRatio(),
+                        benchmark.getCoverage(),
+                        Arrays.toString(benchmark.getGrouping())
+                                .replaceAll("[\\[|\\]]", "")
+                                .replaceAll(",", ";")
+                                .replaceAll("\\.", ",")
+                ));
+    }
 
 
     private static final class Benchmark
@@ -101,6 +207,11 @@ public class IntervalListMeasures
             listSearchTime = measureSearch(list);
         }
 
+        public int getRanges()
+        {
+            return ranges.getCount();
+        }
+
         /**
          * @return кучность заполнения в виде 10 значений с % покрытия интервалов 0..99, 100-199, ...
          */
@@ -118,6 +229,26 @@ public class IntervalListMeasures
                     if ( matcher.match(v) ) count++;
 
                 result[i] = ((float)count) / 100; // по 100 значений в группе
+            }
+            return result;
+        }
+
+        public float[] getGroups100()
+        {
+            float result[] = new float[GROUPING_MAX_GROUPS];
+            // выберем матчер, который оказался сейчас быстрее
+            DigitMatcher matcher = bitsMatchTime < listMatchTime ? bits : list;
+            final int N = COUNT / GROUPING_MAX_GROUPS; // 10
+
+            for (int i = 0; i < GROUPING_MAX_GROUPS; i++) // GROUPING_MAX_GROUPS групп
+            {
+                int count = 0;
+                int j = i*N;
+
+                for (int v = j+0; v < j+N; v++) // по N значений в группе
+                    if ( matcher.match(v) ) count++;
+
+                result[i] = ((float)count) / N; // по 100 значений в группе
             }
             return result;
         }
@@ -181,26 +312,26 @@ public class IntervalListMeasures
         private float measureSearch(DigitMatcher matcher)
         {
             long n1 = System.nanoTime();
-            for (int i = 0; i < LOOP_COUNT; i++)
+            for (int i = 0; i < MEASURES_LOOPS; i++)
             {
                 int v = (int)(random.nextFloat() * COUNT);
                 matcher.getNext(v);
             }
             long n2 = System.nanoTime();
 
-            return ((float)(n2 - n1)) / LOOP_COUNT;
+            return ((float)(n2 - n1)) / MEASURES_LOOPS;
         }
         private float measureMatch(DigitMatcher matcher)
         {
             long n1 = System.nanoTime();
-            for (int i = 0; i < LOOP_COUNT; i++)
+            for (int i = 0; i < MEASURES_LOOPS; i++)
             {
                 int v = (int)(random.nextFloat() * COUNT);
                 matcher.match(v);
             }
             long n2 = System.nanoTime();
 
-            return ((float)(n2 - n1)) / LOOP_COUNT;
+            return ((float)(n2 - n1)) / MEASURES_LOOPS;
         }
 
 

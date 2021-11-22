@@ -70,6 +70,7 @@ public class IntervalListTest
     public Object[][] nextDP()
     {
         return new Object[][]{
+                {-10, 1},
                 {0, 1},
                 {1, 2},
                 {2, 3},
@@ -82,7 +83,7 @@ public class IntervalListTest
                 {29, 30},
                 {30, 41},
                 {49, 50},
-//                {50, 51}, // throws Assertion error, it's right
+                {50, 51},
         };
     }
 
@@ -97,5 +98,17 @@ public class IntervalListTest
         assertTrue(matcher.match(5));
         assertFalse(matcher.match(4));
         assertFalse(matcher.match(6));
+
+        assertEquals(matcher.getNext(3), 5);
+        assertTrue(matcher.hasNext(3));
+
+        assertEquals(matcher.getNext(4), 5);
+        assertTrue(matcher.hasNext(4));
+
+        assertEquals(matcher.getNext(5), 6);
+        assertFalse(matcher.hasNext(5));
+
+        assertEquals(matcher.getNext(6), 7);
+        assertFalse(matcher.hasNext(6));
     }
 }
