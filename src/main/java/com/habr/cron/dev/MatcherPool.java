@@ -38,8 +38,8 @@ class MatcherPool
             if ( element == DAY_OF_WEEK ) continue;
 
             RangeList ranges = model.getModelFor(element);
-            DigitMatcher matcher = createMatcherFor(ranges, element);
-//            DigitMatcher matcher = MatcherFactory.createInstance(ranges, element);
+//            DigitMatcher matcher = createMatcherFor(ranges, element);
+            DigitMatcher matcher = MatcherFactory.createInstance(ranges, element);
             pool[element.ordinal()] = matcher;
         }
 

@@ -1,11 +1,8 @@
 package com.habr.cron.dev;
 
-import org.w3c.dom.css.RGBColor;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.IndexColorModel;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -19,7 +16,6 @@ import java.util.Random;
  *  - кол-во интервалов         2..16
  *  - общее кол-во значений     1%..99%
  *  - кучность значений по диапазонам 0-999, 100-199, ... 900-1000 (процент покрытия)
- *  - M: сколько памяти отъедает
  *  для каждого матчера
  *  - время на поиск
  *  - время на матчинг
@@ -27,13 +23,13 @@ import java.util.Random;
  *  - A: во сколько раз поиск оказался лучше у IntervalList?
  *  - B: во сколько раз матчинг оказался лучше у IntervalList?
  *
- *  Критерий полезности: максимум A+B, при минимуме M.
+ *  Критерий полезности: максимум A*B
  */
-public class IntervalListMeasures
+public class ListOfIntervalsMeasures
 {
     private final static int MEASURES_LOOPS = 100000; // кол-во циклов на измерение одной функции
     private static final int MAX_RANGES = 16; // максимальное число диапазонов
-    private static final int MAX_TRIES_FOR_RANGE = 10; // кол-во попыток измерений для каждого процента заполнения
+    private static final int MAX_TRIES_FOR_RANGE = 100; // кол-во попыток измерений для каждого процента заполнения
     private static final int COVERAGE_MAX_STEPS = 11; // кол-во ступений изменения процента покрытия
     private static final int GROUPING_MAX_GROUPS = 100; // кол-во групп, по которым смотрим статистику распределения
     private static final int LOW = 0;
@@ -68,24 +64,74 @@ public class IntervalListMeasures
 
     public static void main(String args[]) throws Exception
     {
+        //checkPredictions(2);
+        collectMetrics();
+    }
+
+
+    /**
+     * Демонстрирует работу натренированной нейронной сети.
+     * Предсказывает какой матчер был бы лучше на основе распределения значений по диапазону.
+     * И тут же делается реальный бенчмарк, чтобы проверить насколько сошлись предсказания.
+     *
+     * @throws Exception
+     */
+    private static void checkPredictions(int ranges) throws Exception
+    {
+        random = new Random(1L); // заменить на другое число
+        int count_of_miss = 0;
+
+        for (int values = 10, step = 0; values <= 1000; values += 99, step++) // с 1% до 100% с шагом в 9,9%
+        {
+            // делаем по 100 пробных измерений при данном % заполнения
+            for (int tries = 0; tries < MAX_TRIES_FOR_RANGE; tries++)
+            {
+                Benchmark benchmark = new Benchmark(ranges, values);
+                benchmark.run();
+
+                float ratio = benchmark.getMatchRatio() * benchmark.getSearchRatio();
+                boolean expected = ratio > 1.5; // какой матчер ожидается использовать?
+
+                boolean actual = MatcherSelectorSolver.solve( benchmark.getGrouping() );
+
+                System.out.println(ratio + "\t" + actual);
+
+                if ( expected != actual )
+                {
+                    count_of_miss++;
+                    //System.out.println(String.format("Промашка: коэффициент %f", ratio));
+                }
+            }
+        }
+
+        System.out.println(String.format("Всего промахов: %d из %d", count_of_miss, MAX_TRIES_FOR_RANGE*COVERAGE_MAX_STEPS));
+    }
+
+
+    /**
+     * Выполняет сбор метрик производительности матчеров и записывает это в файлы.
+     * В последующем данные файлов будут использованы для тренировки нейронных сетей.
+     *
+     * @throws Exception
+     */
+    private static void collectMetrics() throws Exception
+    {
         random = new Random(1L);
 
         for (int ranges = 2; ranges <= MAX_RANGES; ranges++) // увеличиваем кол-во диапазонов до 16-ти
         {
             generateBenchResults(ranges);
-            visualizeBenchResults(ranges);
+            //visualizeBenchResults(ranges);
         }
     }
+
 
 
     private static void generateBenchResults(int ranges) throws IOException
     {
         File output = new File("out", ranges + ".csv");
         PrintWriter pw = new PrintWriter(new FileWriter(output, false), true);
-
-        System.out.println("ranges;coverage;match;search;ratio;schedule;groups");
-        pw.println("ranges;ratio;coverage;groups");
-
+        pw.println("ranges;match;search;coverage;groups");
 
         // плавно изменяем процент покрытия диапазона значениями (COVERAGE_MAX_STEPS шагов)
         for (int values = 10, step = 0; values <= 1000; values += 99, step++) // с 1% до 100% с шагом в 9,9%
@@ -99,8 +145,9 @@ public class IntervalListMeasures
                 results[step * MAX_TRIES_FOR_RANGE + tries] = new BenchResult(benchmark);
 
                 writeToFile(pw, benchmark);
-                writeToScreen(benchmark);
+                //writeToScreen(benchmark);
             }
+            System.out.println(ranges + "\t" + step);
         }
         pw.close();
     }
@@ -148,7 +195,7 @@ public class IntervalListMeasures
     private static void writeToScreen(Benchmark benchmark)
     {
         System.out.println(
-                String.format("[%d] coverage:%f match:%f search:%f total:%f schedule:%s grouping:%s",
+                String.format("[%d] coverage:%f match:%f search:%f ratio:%f schedule:%s grouping:%s",
                         benchmark.getRanges(),
                         benchmark.getCoverage(),
                         benchmark.getMatchRatio(),
@@ -165,9 +212,10 @@ public class IntervalListMeasures
     private static void writeToFile(PrintWriter pw, Benchmark benchmark)
     {
         pw.println(
-                String.format("%d;%f;%f;%s",
+                String.format("%d;%f;%f;%f;%s",
                         benchmark.getRanges(),
-                        benchmark.getMatchRatio() * benchmark.getSearchRatio(),
+                        benchmark.getMatchRatio(),
+                        benchmark.getSearchRatio(),
                         benchmark.getCoverage(),
                         Arrays.toString(benchmark.getGrouping())
                                 .replaceAll("[\\[|\\]]", "")
@@ -179,7 +227,7 @@ public class IntervalListMeasures
 
     private static final class Benchmark
     {
-        ListOfIntervalMatcher list;
+        ListOfIntervalsMatcher list;
         BitMapMatcher bits;
         RangeList ranges;
 
@@ -195,7 +243,7 @@ public class IntervalListMeasures
         {
             realCount = countOfValues;
             ranges = new RangeList(countOrRanges);
-            generateRanges();
+            generateRanges(countOrRanges);
             setupRanges();
         }
 
@@ -287,10 +335,10 @@ public class IntervalListMeasures
 
 
 
-        private void generateRanges()
+        private void generateRanges(int count)
         {
             // границы диапазонов будут здесь; потом их отсортируем
-            int bounds[] = new int[ranges.getCount()*2];
+            int bounds[] = new int[count*2];
 
             // заполним их случайными величинами
             for (int i = 0; i < bounds.length; i++)
@@ -298,7 +346,7 @@ public class IntervalListMeasures
 
             Arrays.sort(bounds); // отсортируем
 
-            for (int i = 0; i < ranges.getCount(); i++)
+            for (int i = 0; i < count; i++)
             {
                 int lo = bounds[i*2 + 0];
                 int hi = bounds[i*2 + 1];
@@ -337,7 +385,7 @@ public class IntervalListMeasures
 
         private void setupRanges()
         {
-            list = new ListOfIntervalMatcher(ranges.getCount());
+            list = new ListOfIntervalsMatcher(ranges.getCount());
             setRanges(list, ranges);
 
             bits = new BitMapMatcher(LOW, HIGH);

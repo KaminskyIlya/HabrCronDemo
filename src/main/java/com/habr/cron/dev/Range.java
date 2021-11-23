@@ -10,7 +10,7 @@ import static com.habr.cron.dev.ScheduleElements.FEBRUARY_LEAP_DAY;
  * Range of valid values.
  * Simple element of schedule (any expression between comma).
  */
-final class Range
+final class Range implements Comparable<Range>
 {
     public static final Range ASTERISK = new Range();
 
@@ -66,18 +66,29 @@ final class Range
 
 
 
-
-    public boolean isAsterisk() {
+    /**
+     * @return true, if this range is asterisk ('*') or asterisk with step ('* /n')
+     */
+    public boolean isAsterisk()
+    {
         return asterisk;
     }
 
-    public boolean isStepped() {
+    /**
+     * @return true, if this range has a step ('a/n', 'a-b/n')
+     */
+    public boolean isStepped()
+    {
         return step > 1;
     }
 
+    /**
+     * @return the range value if it is a constant ('a')
+     */
     public int getValue()
     {
         assert isConstant() && step == 1;
+
         return min;
     }
 
@@ -129,6 +140,34 @@ final class Range
         min += value; max += value;
     }
 
+    /**
+     * Merges two ranges together.
+     * All ranges MUST have step = 1
+     * The result is equivalent: this.merge(o) == o.merge(this).
+     * TODO: (можно будет ослабить это требование, если шаг совпадает или кратен)
+     *
+     * @param o another range
+     */
+    public void merge(Range o)
+    {
+        assert step == 1 && o.step == 1;
+        assert isIntersects(o);
+
+        if ( o.min < min ) min = o.min;
+        if ( o.max > max ) max = o.max;
+    }
+
+
+    /**
+     * Checks that ranges intersects
+     *
+     * @param o another range
+     * @return true, if intersects
+     */
+    public boolean isIntersects(Range o)
+    {
+        return !(max < o.min || o.max < min); // not: full on left or full on right
+    }
 
     @Override
     public String toString()
@@ -139,5 +178,11 @@ final class Range
         if ( isConstant() ) return Integer.toString(min);
 
         return isStepped() ? min + "-" + max + "/" + step : min + "-" + max;
+    }
+
+
+    public int compareTo(Range o)
+    {
+        return min < o.min ? -1 : min == o.min ? 0 : 1;
     }
 }
