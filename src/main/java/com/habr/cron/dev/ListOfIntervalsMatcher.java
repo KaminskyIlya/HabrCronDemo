@@ -1,14 +1,23 @@
 package com.habr.cron.dev;
 
 /**
- * NOTE: This was a concept of class. Used in benchmark only.
- * The concept was suggested by the user @mayorovp in https://habr.com/ru/post/589667/comments/#comment_23717693
+ * Special matcher for milliseconds.
+ * Handles a complex schedules, such as '40,100-120,200-300/3,500-501'.
+ * Intervals MUST be without steps, sorted in ascending order and not be intersects!
+ * Used if a small set of ranges is specified (not over 8).
  *
- * Интервалы пока без шага (т.е простые 10-20). Полагается, что они в расписании идут упорядоченными
- * и не пересекаются.
+ * Difficulty:
+ *  matching one value - O(log n)
+ *  find nearest value - O(log n)
+ * Used memory:
+ *  72 bytes maximum, 16 bytes minimum
  *
+ *  Maximum loop are: 3 for search range.
+ *
+ * The concept was suggested by the user @mayorovp in
+ * https://habr.com/ru/post/589667/comments/#comment_23717693
  */
-class ListOfIntervalMatcher implements DigitMatcher, MapMatcher
+class ListOfIntervalsMatcher implements DigitMatcher, MapMatcher
 {
     /**
      * Arrays of intervals bounds
@@ -24,7 +33,7 @@ class ListOfIntervalMatcher implements DigitMatcher, MapMatcher
     private final int LAST; // index of last interval
 
 
-    public ListOfIntervalMatcher(int count)
+    public ListOfIntervalsMatcher(int count)
     {
         LAST = count-1;
         min = new int[count];
@@ -60,15 +69,6 @@ class ListOfIntervalMatcher implements DigitMatcher, MapMatcher
         return index != NOT_FOUND && value <= max[index];
     }
 
-    public boolean isAbove(int value)
-    {
-        return value > high;
-    }
-
-    public boolean isBelow(int value)
-    {
-        return value < low;
-    }
 
     public int getNext(int value)
     {
@@ -83,17 +83,34 @@ class ListOfIntervalMatcher implements DigitMatcher, MapMatcher
         return value+1; // this should not happen if you call hasNext() before
     }
 
+
     public int getPrev(int value)
     {
         int index = search(value);
 
-        if ( index != NOT_FOUND && value > min[index] )//тщательно проверить и эти случаи (когда диапазон из одной цифры)
-            return value - 1;
+        if ( index == NOT_FOUND )
+            return value-1; // this should not happen if you call hasPrev() before
 
-        if ( index > FIRST )
-            return min[index-1];//ошибка здесь, написать на неё тест
+        if ( value > max[LAST] )
+            return max[LAST];
 
-        return value-1; // this should not happen if you call hasPrev() before
+        if ( value > min[index] )
+            return value-1;
+
+        // this should not happen if you call hasPrev() before
+        return index > FIRST ? max[index-1] : value-1;
+    }
+
+
+
+    public boolean isAbove(int value)
+    {
+        return value > high;
+    }
+
+    public boolean isBelow(int value)
+    {
+        return value < low;
     }
 
     public boolean hasNext(int value)
@@ -119,18 +136,20 @@ class ListOfIntervalMatcher implements DigitMatcher, MapMatcher
 
 
 
+
     private int top = FIRST;
 
     /**
-     * Пока полагаем, что интервалы будут упорядочены и не пересекаться, а step всегда = 1.
+     * Intervals MUST be ordered in ascending and not be intersects!
      *
      * @param from begin value (include)
      * @param to end value (include)
-     * @param step between values
+     * @param dist distance between values
      */
-    public void addRange(int from, int to, int step)
+    public void addRange(int from, int to, int dist)
     {
-        assert top <= LAST; // защита от переполнения числа интервалов (ведь мы же используем голые массивы)
+        assert top <= LAST; // overflow protected
+        assert dist == 1;
 
         min[top] = from;
         max[top] = to;
@@ -145,6 +164,6 @@ class ListOfIntervalMatcher implements DigitMatcher, MapMatcher
 
     public void addValue(int value)
     {
-        throw new UnsupportedOperationException(); // пока одиночные интервалы не поддерживаем
+        throw new UnsupportedOperationException(); // a single constant not supported
     }
 }
