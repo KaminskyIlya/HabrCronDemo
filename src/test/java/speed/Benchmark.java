@@ -12,7 +12,7 @@ import java.util.Date;
 public class Benchmark
 {
     private static final SimpleDateFormat fmt = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss.SSS");
-    private static final int LOOP_COUNT = 100000; // 100 тыс. раз повторений для сглаживания погрешности измерений
+    private static final int LOOP_COUNT = 10000; // 10 тыс. раз повторений для сглаживания погрешности измерений
                                                   // можно было бы и больше, но алгоритм NoVar очень медленный
 
     public static void main(String args[]) throws Exception
@@ -25,30 +25,39 @@ public class Benchmark
             long nanos;
 
 
-//            cron = new com.habr.cron.novar.Schedule(schedule);
-//            nanos = runCronBenchmark(cron, date);
-//            System.out.println(
-//                    String.format("[NoVar] %s %s  - %d nsec",
-//                            schedule,
-//                            data[1],
-//                            nanos)
-//            );
+            cron = new com.habr.cron.novar.Schedule(schedule);
+            nanos = runCronBenchmark(cron, date);
+            System.out.println(
+                    String.format("[NoVar] %s %s  - %d nsec",
+                            schedule,
+                            data[1],
+                            nanos)
+            );
 
 
-//            cron = new com.habr.cron.ilya.Schedule(schedule);
-//            nanos = runCronBenchmark(cron, date);
-//            System.out.println(
-//                    String.format("[Ilya] %s %s  - %d nsec",
-//                            schedule,
-//                            data[1],
-//                            nanos)
-//            );
+            cron = new com.habr.cron.ilya.Schedule(schedule);
+            nanos = runCronBenchmark(cron, date);
+            System.out.println(
+                    String.format("[Example] %s %s  - %d nsec",
+                            schedule,
+                            data[1],
+                            nanos)
+            );
 
 
             cron = new com.habr.cron.dev.Schedule(schedule);
             nanos = runCronBenchmark(cron, date);
             System.out.println(
-                    String.format("[Dev] %s %s  - %d nsec",
+                    String.format("[Develop] %s %s  - %d nsec",
+                            schedule,
+                            data[1],
+                            nanos)
+            );
+
+            cron = new com.habr.cron.opt.Schedule(schedule);
+            nanos = runCronBenchmark(cron, date);
+            System.out.println(
+                    String.format("[Optimized] %s %s  - %d nsec",
                             schedule,
                             data[1],
                             nanos)
