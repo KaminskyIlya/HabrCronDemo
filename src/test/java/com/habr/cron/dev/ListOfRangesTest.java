@@ -1,23 +1,20 @@
 package com.habr.cron.dev;
 
-import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
-public class IntervalListTest
+public class ListOfRangesTest
 {
-    private ListOfIntervalMatcher list;
+    private ListOfIntervalsMatcher list;
 
     @BeforeMethod
     public void setUp() throws Exception
     {
         // 1-10,12-18,21-30,41-50
-        list = new ListOfIntervalMatcher(4);
+        list = new ListOfIntervalsMatcher(4);
         list.addRange(1, 10, 1);
         list.addRange(12, 18, 1);
         list.addRange(21, 30, 1);
@@ -87,11 +84,83 @@ public class IntervalListTest
         };
     }
 
+    @Test(dataProvider = "prevDP")
+    public void testPrev(int value, int expected) throws Exception
+    {
+        int actual = list.getPrev(value);
+        assertEquals(actual, expected);
+    }
+    @DataProvider
+    public Object[][] prevDP()
+    {
+        // 1-10,12-18,21-30,41-50
+        return new Object[][]{
+                {-10, -11},
+                {60, 50},
+                {50, 49},
+                {49, 48},
+                {42, 41},
+                {41, 30},
+                {30, 29},
+                {22, 21},
+                {21, 18},
+                {18, 17},
+                {12, 10},
+                {10, 9},
+                {9, 8},
+                {2, 1},
+                {1, 0},
+                {0, -1},
+        };
+    }
+
+    @Test
+    public void testSteppedRanges() throws Exception
+    {
+        ListOfRangesMatcher list = new ListOfRangesMatcher(4);
+        list.addRange(1, 10, 2);  //1,3,5,7,9
+        list.addRange(12, 18, 3); //12,15,18
+        list.addRange(21, 30, 4); //21,25,29
+        list.addRange(41, 60, 5); //41,46,51,56
+        list.finishRange();
+
+        assertEquals(list.getNext(0), 1);
+        assertEquals(list.getNext(1), 3);
+        assertEquals(list.getNext(2), 3);
+        assertEquals(list.getNext(9), 12);
+        assertEquals(list.getNext(10), 12);
+        assertEquals(list.getNext(18), 21);
+        assertEquals(list.getNext(21), 25);
+        assertEquals(list.getNext(25), 29);
+        assertEquals(list.getNext(29), 41);
+        assertEquals(list.getNext(60), 61); //out of bounds
+
+        assertEquals(list.getPrev(70), 56);
+        assertEquals(list.getPrev(60), 56);
+        assertEquals(list.getPrev(56), 51);
+        assertEquals(list.getPrev(55), 51);
+        assertEquals(list.getPrev(21), 18);
+        assertEquals(list.getPrev(10), 9);
+        assertEquals(list.getPrev(11), 9);
+        assertEquals(list.getPrev(12), 9);
+        assertEquals(list.getPrev(1), 0); // out of bounds
+
+        assertTrue(list.match(1));
+        assertTrue(list.match(3));
+        assertTrue(list.match(15));
+        assertTrue(list.match(29));
+        assertTrue(list.match(56));
+
+        assertFalse(list.match(2));
+        assertFalse(list.match(4));
+        assertFalse(list.match(30));
+        assertFalse(list.match(60));
+    }
 
     @Test
     public void testSpecialCase() throws Exception
     {
-        ListOfIntervalMatcher matcher = new ListOfIntervalMatcher(1);
+        ListOfIntervalsMatcher matcher = new ListOfIntervalsMatcher(1);
         matcher.addRange(5, 5, 1);
         matcher.finishRange();
 
