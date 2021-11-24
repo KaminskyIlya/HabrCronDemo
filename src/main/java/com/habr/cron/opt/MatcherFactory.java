@@ -4,7 +4,7 @@ package com.habr.cron.opt;
  * Helper class.
  * Help to select the best map matcher.
  */
-public class MatcherFactory
+class MatcherFactory
 {
     /**
      * Help to select the best matcher for specified ranges list.
@@ -48,10 +48,8 @@ public class MatcherFactory
         int min = ranges.getMinimum();
         int max = ranges.getMaximum();
 
-        boolean large = (max - min) > HashMapMatcher.RANGE_LIMIT;
-
         // for small ranges we can use simple hashMap
-        if ( !large )
+        if ( (max - min) <= HashMapMatcher.RANGE_LIMIT )
         {
             HashMapMatcher hash = new HashMapMatcher(min, max);
             setRanges(hash, ranges);
