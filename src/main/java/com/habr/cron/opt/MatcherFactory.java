@@ -49,10 +49,9 @@ public class MatcherFactory
         int max = ranges.getMaximum();
 
         boolean large = (max - min) > HashMapMatcher.RANGE_LIMIT;
-        boolean overflow = (element.max - element.min) >= Byte.MAX_VALUE;
 
         // for small ranges we can use simple hashMap
-        if ( !(large || overflow) )
+        if ( !large )
         {
             HashMapMatcher hash = new HashMapMatcher(min, max);
             setRanges(hash, ranges);

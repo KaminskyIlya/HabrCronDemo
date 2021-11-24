@@ -18,9 +18,12 @@ import java.util.Arrays;
 class HashMapMatcher extends MatcherBase implements MapMatcher
 {
     public static final int MAX_DISTANCE = 64;
-    public static final int OVERFLOW_DISTANCE = Byte.MAX_VALUE; //127
-    private static final byte NO_NEXT = Byte.MAX_VALUE; // 127
-    private static final byte NO_PREV = -1;
+
+    private static final byte NO_NEXT = Byte.MAX_VALUE;
+    private static final byte NO_PREV = Byte.MIN_VALUE;
+
+    static final int NO_NEXT_VALUE = Integer.MAX_VALUE;
+    static final int NO_PREV_VALUE = Integer.MIN_VALUE;
 
     /**
      * Bitmap with valid values. Each restricted value has bit 1.
@@ -80,7 +83,7 @@ class HashMapMatcher extends MatcherBase implements MapMatcher
         for (int i = min, j = 1; i < max; i++, j++)
         {
             boolean has = isAllowed(i);
-            if ( has ) p = (byte) i;
+            if ( has ) p = (byte) (i - min);
             prev[j] = p;
         }
 
@@ -89,7 +92,7 @@ class HashMapMatcher extends MatcherBase implements MapMatcher
         {
             next[j] = n;
             boolean has = isAllowed(i);
-            if ( has ) n = (byte) i;
+            if ( has ) n = (byte) (i - min);
         }
     }
 
@@ -104,16 +107,16 @@ class HashMapMatcher extends MatcherBase implements MapMatcher
 
     public int getMajor(int value, CalendarElement element)
     {
-        if ( value >= max ) return NO_NEXT;
+        if ( value >= max ) return NO_NEXT_VALUE;
         if ( value < min ) return min;
-        return next[value - min];
+        return next[value - min] + min;
     }
 
     public int getMinor(int value, CalendarElement element)
     {
-        if ( value <= min ) return NO_PREV;
+        if ( value <= min ) return NO_PREV_VALUE;
         if ( value > max ) return max;
-        return prev[value - min];
+        return prev[value - min] + min;
     }
 
     @Override

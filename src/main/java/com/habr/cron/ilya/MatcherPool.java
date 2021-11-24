@@ -61,7 +61,7 @@ class MatcherPool
         return ranges.isAlone() ?
                 createSingleRange(ranges.getSingle(), element) // for schedule: 'a-b/n' or 'a', 'a-b'
                 :
-                createMultiRange(ranges, element); // for schedule: 'a,b-c,d,e-f/g,...'
+                createMultiRange(ranges); // for schedule: 'a,b-c,d,e-f/g,...'
     }
 
 
@@ -88,9 +88,9 @@ class MatcherPool
 
 
 
-    private ScheduleItemMatcher createMultiRange(RangeList ranges, ScheduleElements element)
+    private ScheduleItemMatcher createMultiRange(RangeList ranges)
     {
-        ScheduleItemMatcher matcher = getBestMatcherFor(ranges, element);
+        ScheduleItemMatcher matcher = getBestMatcherFor(ranges);
         MapMatcher map = (MapMatcher )matcher;
 
         for (Range range : ranges)
@@ -101,15 +101,13 @@ class MatcherPool
     }
 
 
-    private ScheduleItemMatcher getBestMatcherFor(RangeList ranges, ScheduleElements element)
+    private ScheduleItemMatcher getBestMatcherFor(RangeList ranges)
     {
         int min = ranges.getMinimum();
         int max = ranges.getMaximum();
 
         boolean large = (max - min) > HashMapMatcher.MAX_DISTANCE;
-        boolean overflow = (element.max - element.min) >= HashMapMatcher.OVERFLOW_DISTANCE;
-
-        return large || overflow ? new BitMapMatcher(min, max) : new HashMapMatcher(min, max);
+        return large ? new BitMapMatcher(min, max) : new HashMapMatcher(min, max);
     }
 
 

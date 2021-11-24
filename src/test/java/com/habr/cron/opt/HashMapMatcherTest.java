@@ -104,7 +104,7 @@ public class HashMapMatcherTest
                 {24, 27},
                 {25, 27},
                 {26, 27},
-                {27, 127},
+                {27, 127 + 1},
         };
     }
 
@@ -122,7 +122,7 @@ public class HashMapMatcherTest
     {
         // value, expected result
         return new Object[][]{
-                {1, -1},
+                {1, 1 - 128},
                 {2, 1},
                 {3, 2},
                 {4, 2},
