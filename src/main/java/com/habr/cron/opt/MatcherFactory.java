@@ -49,7 +49,7 @@ class MatcherFactory
         int max = ranges.getMaximum();
 
         // for small ranges we can use simple hashMap
-        if ( (max - min) <= HashMapMatcher.RANGE_LIMIT )
+        if ( (max - min) < HashMapMatcher.RANGE_LIMIT )
         {
             HashMapMatcher hash = new HashMapMatcher(min, max);
             setRanges(hash, ranges);

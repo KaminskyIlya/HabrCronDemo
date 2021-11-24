@@ -134,7 +134,7 @@ class MatcherPool
         int min = ranges.getMinimum();
         int max = ranges.getMaximum();
 
-        boolean large = (max - min) > HashMapMatcher.RANGE_LIMIT;
+        boolean large = (max - min) >= HashMapMatcher.RANGE_LIMIT;
         boolean overflow = (element.max - element.min) >= Byte.MAX_VALUE;
 
         return large || overflow ? new BitMapMatcher(min, max) : new HashMapMatcher(min, max);

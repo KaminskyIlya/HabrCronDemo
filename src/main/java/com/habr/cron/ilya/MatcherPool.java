@@ -106,7 +106,7 @@ class MatcherPool
         int min = ranges.getMinimum();
         int max = ranges.getMaximum();
 
-        boolean large = (max - min) > HashMapMatcher.MAX_DISTANCE;
+        boolean large = (max - min) >= HashMapMatcher.MAX_DISTANCE;
         return large ? new BitMapMatcher(min, max) : new HashMapMatcher(min, max);
     }
 
