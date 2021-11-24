@@ -68,6 +68,18 @@ class ScheduleModel
         return model[MILLIS.ordinal()] != null;
     }
 
+    public boolean isAnyDate()
+    {
+        return model[YEAR.ordinal()] == RangeList.ASTERISK
+            && model[MONTH.ordinal()] == RangeList.ASTERISK
+            && model[DAY_OF_MONTH.ordinal()] == RangeList.ASTERISK;
+    }
+
+    public boolean isAnyWeekDay()
+    {
+        return model[DAY_OF_WEEK.ordinal()] == RangeList.ASTERISK;
+    }
+
     /**
      * Checks logical correctness of the model.
      *

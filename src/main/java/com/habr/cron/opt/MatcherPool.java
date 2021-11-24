@@ -28,6 +28,15 @@ class MatcherPool
     private final DaysMap normalYearMap;
     private final DaysMap leapYearMap;
 
+    /**
+     * Has true, if date skipped in schedule or equals to '*.*.*'
+     */
+    private final boolean anyDate;
+    /**
+     * Has true, if weekday not present in schedule or equals to '*'
+     */
+    private final boolean anyWeekDay;
+
 
 
     public MatcherPool(ScheduleModel model) throws ScheduleFormatException
@@ -46,6 +55,9 @@ class MatcherPool
         monthMap = createMonthMap(model.getModelFor(DAY_OF_MONTH)); // 1..31
         normalYearMap = createYearMap(model.getModelFor(MONTH), false);
         leapYearMap = createYearMap(model.getModelFor(MONTH), true);
+
+        anyDate = model.isAnyDate();
+        anyWeekDay = model.isAnyWeekDay();
 
         try {
             fixYearsForLastFebruaryDay(model); // fix schedule for "???.02.29"
@@ -79,6 +91,16 @@ class MatcherPool
     public DaysMap getLeapYearMap()
     {
         return leapYearMap;
+    }
+
+    public boolean isAnyDate()
+    {
+        return anyDate;
+    }
+
+    public boolean isAnyWeekDay()
+    {
+        return anyWeekDay;
     }
 
 

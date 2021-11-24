@@ -17,8 +17,9 @@ import java.util.Arrays;
  */
 class HashMapMatcher extends MatcherBase implements MapMatcher
 {
-    private static final int MAX_DISTANCE = 64;
-    private static final byte NO_NEXT = 127;
+    public static final int MAX_DISTANCE = 64;
+    public static final int OVERFLOW_DISTANCE = Byte.MAX_VALUE; //127
+    private static final byte NO_NEXT = Byte.MAX_VALUE; // 127
     private static final byte NO_PREV = -1;
 
     /**

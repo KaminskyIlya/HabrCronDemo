@@ -1,5 +1,6 @@
 package com.habr.cron.ilya;
 
+import javax.print.DocFlavor;
 import java.util.GregorianCalendar;
 
 import static com.habr.cron.ilya.ScheduleElements.*;
@@ -60,7 +61,7 @@ class MatcherPool
         return ranges.isAlone() ?
                 createSingleRange(ranges.getSingle(), element) // for schedule: 'a-b/n' or 'a', 'a-b'
                 :
-                createMultiRange(ranges); // for schedule: 'a,b-c,d,e-f/g,...'
+                createMultiRange(ranges, element); // for schedule: 'a,b-c,d,e-f/g,...'
     }
 
 
@@ -87,9 +88,9 @@ class MatcherPool
 
 
 
-    private ScheduleItemMatcher createMultiRange(RangeList ranges)
+    private ScheduleItemMatcher createMultiRange(RangeList ranges, ScheduleElements element)
     {
-        ScheduleItemMatcher matcher = getBestMatcherFor(ranges);
+        ScheduleItemMatcher matcher = getBestMatcherFor(ranges, element);
         MapMatcher map = (MapMatcher )matcher;
 
         for (Range range : ranges)
@@ -100,13 +101,15 @@ class MatcherPool
     }
 
 
-    private ScheduleItemMatcher getBestMatcherFor(RangeList ranges)
+    private ScheduleItemMatcher getBestMatcherFor(RangeList ranges, ScheduleElements element)
     {
         int min = ranges.getMinimum();
         int max = ranges.getMaximum();
 
-        boolean large = (max - min) > 64;
-        return large ? new BitMapMatcher(min, max) : new HashMapMatcher(min, max);
+        boolean large = (max - min) > HashMapMatcher.MAX_DISTANCE;
+        boolean overflow = (element.max - element.min) >= HashMapMatcher.OVERFLOW_DISTANCE;
+
+        return large || overflow ? new BitMapMatcher(min, max) : new HashMapMatcher(min, max);
     }
 
 

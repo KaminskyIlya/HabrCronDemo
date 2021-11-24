@@ -1,8 +1,6 @@
 package speed;
 
-import com.habr.cron.Cron;
-import com.habr.cron.dev.ScheduleEventsGenerator;
-import com.habr.cron.dev.Schedule;
+import com.habr.cron.ScheduleEventsGenerator;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -23,17 +21,32 @@ public class GeneratorBench
             String schedule = data[0];
             long nanos;
 
-            Schedule cron = new com.habr.cron.dev.Schedule(schedule);
-            ScheduleEventsGenerator generator = cron.getEventsGenerator(date, true);
+            {
+                com.habr.cron.dev.Schedule cron = new com.habr.cron.dev.Schedule(schedule);
+                ScheduleEventsGenerator generator = cron.getEventsGenerator(date, true);
 
-            nanos = runCronBenchmark(generator);
-            System.out.println(
-                    String.format("[Gen] %s [%s .. %s] - %d nsec",
-                            schedule,
-                            data[1],
-                            fmt.format(generator.last()),
-                            nanos)
-            );
+                nanos = runCronBenchmark(generator);
+                System.out.println(
+                        String.format("[Dev.Gen] %s [%s .. %s] - %d nsec",
+                                schedule,
+                                data[1],
+                                fmt.format(generator.last()),
+                                nanos)
+                );
+            }
+            {
+                com.habr.cron.opt.Schedule cron = new com.habr.cron.opt.Schedule(schedule);
+                ScheduleEventsGenerator generator = cron.getEventsGenerator(date, true);
+
+                nanos = runCronBenchmark(generator);
+                System.out.println(
+                        String.format("[Opt.Gen] %s [%s .. %s] - %d nsec",
+                                schedule,
+                                data[1],
+                                fmt.format(generator.last()),
+                                nanos)
+                );
+            }
         }
     }
 

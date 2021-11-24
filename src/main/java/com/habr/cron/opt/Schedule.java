@@ -2,6 +2,7 @@ package com.habr.cron.opt;
 
 import com.habr.cron.Cron;
 import com.habr.cron.CronBase;
+import com.habr.cron.ScheduleEventsGenerator;
 
 import java.util.Date;
 import java.util.TimeZone;
@@ -125,12 +126,15 @@ public class Schedule implements Cron
         GregCalendar calendar = new GregCalendar(date, UTC);
         CalendarDigits digits = new CalendarDigits(pool, calendar, mode.toZero());
 
+        // skip date check, if not present in schedule
+        if ( pool.isAnyDate() ) digits.gotoHours();
+
         while ( isCanSearchDown(digits, calendar, mode.canEqual()) )
         {
             digits.next();
         }
 
-        return fixWeekDay(digits, calendar);
+        return pool.isAnyWeekDay() ? calendar.asDate() : fixWeekDay(digits, calendar);
     }
 
 
@@ -143,11 +147,13 @@ public class Schedule implements Cron
         private final GregCalendar calendar;
         private final CalendarDigits digits;
         private Date date;
+        boolean fix;
 
         public EventsGenerator(Date start, SearchMode mode)
         {
             calendar = new GregCalendar(start, UTC);
             digits = new CalendarDigits(pool, calendar, mode.toZero());
+            fix = pool.isAnyWeekDay();
             date = start;
 
             while ( isCanSearchDown(digits, calendar, mode.canEqual()) )
@@ -166,7 +172,7 @@ public class Schedule implements Cron
 
         public Date next()
         {
-            date = fixWeekDay(digits, calendar); // fix date for previous result
+            date = fix ? calendar.asDate() : fixWeekDay(digits, calendar); // fix date for previous result
 
             // prepare to calculate the next result
             digits.gotoLastDigit();
@@ -241,15 +247,12 @@ public class Schedule implements Cron
     private Date fixWeekDay(CalendarDigits digits, GregCalendar calendar)
     {
         DaysMap weekMap = pool.getWeekDaysMap();
-        if ( !weekMap.isAsterisk() )
+        if ( !weekMap.contains(calendar.getDayOfWeek()) )
         {
-            if ( !weekMap.contains(calendar.getDayOfWeek()) )
-            {
-                findBestDate(digits, calendar, weekMap);
+            findBestDate(digits, calendar, weekMap);
 
-                digits.gotoHours();
-                digits.initialize();
-            }
+            digits.gotoHours();
+            digits.initialize();
         }
         return calendar.asDate();
     }
