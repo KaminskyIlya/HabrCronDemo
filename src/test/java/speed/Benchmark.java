@@ -1,19 +1,18 @@
 package speed;
 
 import com.habr.cron.Cron;
-import com.habr.cron.novar.Schedule;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
  * Тест скорости выполнения разных алгоритмов.
- * Измеренная скорость: 52мкс (для худшего случая)
  */
 public class Benchmark
 {
     private static final SimpleDateFormat fmt = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss.SSS");
-    private static final int LOOP_COUNT = 10000; // 10 тыс. раз повторений для сглаживания погрешности измерений
-                                                  // можно было бы и больше, но алгоритм NoVar очень медленный
+    private static final int LOOP_COUNT = 100000; // 10 тыс. раз повторений для сглаживания погрешности измерений
+    // можно было бы и больше, но алгоритм NoVar очень медленный
 
     public static void main(String args[]) throws Exception
     {
@@ -25,6 +24,7 @@ public class Benchmark
             long nanos;
 
 
+/*
             cron = new com.habr.cron.novar.Schedule(schedule);
             nanos = runCronBenchmark(cron, date);
             System.out.println(
@@ -33,6 +33,7 @@ public class Benchmark
                             data[1],
                             nanos)
             );
+*/
 
 
             cron = new com.habr.cron.ilya.Schedule(schedule);
@@ -45,19 +46,20 @@ public class Benchmark
             );
 
 
-            cron = new com.habr.cron.dev.Schedule(schedule);
+            cron = new com.habr.cron.opt.Schedule(schedule);
             nanos = runCronBenchmark(cron, date);
             System.out.println(
-                    String.format("[Develop] %s %s  - %d nsec",
+                    String.format("[Optimized] %s %s  - %d nsec",
                             schedule,
                             data[1],
                             nanos)
             );
 
-            cron = new com.habr.cron.opt.Schedule(schedule);
+
+            cron = new com.habr.cron.dev.Schedule(schedule);
             nanos = runCronBenchmark(cron, date);
             System.out.println(
-                    String.format("[Optimized] %s %s  - %d nsec",
+                    String.format("[Develop] %s %s  - %d nsec",
                             schedule,
                             data[1],
                             nanos)

@@ -79,7 +79,7 @@ class MatcherFactory
         setRanges(bits, ranges);
 
         // When count of ranges over than 8 the bits map will always better
-        if ( ranges.getCount() > 8 ) return bits;
+        if ( ranges.getCount() > 10 ) return bits;
 
         // different intervals with and without steps requires different algo
         DigitMatcher list = ranges.isSimpleIntervals() ?
@@ -90,8 +90,6 @@ class MatcherFactory
         setRanges((MapMatcher) list, ranges);
 
         return list;
-        // run real speed benchmarks
-        //return selectBestMatcher(bits, list);
     }
 
 
@@ -103,44 +101,4 @@ class MatcherFactory
         }
         matcher.finishRange();
     }
-
-
-   /* private static DigitMatcher selectBestMatcher(DigitMatcher bits, DigitMatcher list)
-    {
-        float listMatchTime = measureMatch(list);
-        float listSearchTime = measureSearch(list);
-        float bitsMatchTime = measureMatch(bits);
-        float bitsSearchTime = measureSearch(bits);
-
-        float matchRatio = bitsMatchTime / listMatchTime;
-        float searchRatio = bitsSearchTime / listSearchTime;
-        float ratio = matchRatio * searchRatio;
-
-        return ratio > 1 ? list : bits;
-    }
-
-
-    private static float measureSearch(DigitMatcher matcher)
-    {
-        int low = matcher.getLow();
-        int high = matcher.getHigh();
-
-        long n1 = System.nanoTime();
-        for (int v = low; v <= high; v++)   matcher.getNext(v);
-        long n2 = System.nanoTime();
-
-        return ((float)(n2 - n1)) / (high - low + 1);
-    }
-
-    private static float measureMatch(DigitMatcher matcher)
-    {
-        int low = matcher.getLow();
-        int high = matcher.getHigh();
-
-        long n1 = System.nanoTime();
-        for (int v = low; v <= high; v++)   matcher.match(v);
-        long n2 = System.nanoTime();
-
-        return ((float)(n2 - n1)) / (high - low + 1);
-    }*/
 }

@@ -741,7 +741,7 @@ public class ScheduleTest
         };
     }
 
-    @Test
+    @Test //test for #0004 bug
     public void testGeneratorOnSmallRangeForMillisMustUseBitMap() throws Exception
     {
         f.setTimeZone(TimeZone.getTimeZone("UTC"));
