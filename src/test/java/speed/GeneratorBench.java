@@ -22,12 +22,12 @@ public class GeneratorBench
             long nanos;
 
             {
-                com.habr.cron.dev.Schedule cron = new com.habr.cron.dev.Schedule(schedule);
+                com.habr.cron.opt.Schedule cron = new com.habr.cron.opt.Schedule(schedule);
                 ScheduleEventsGenerator generator = cron.getEventsGenerator(date, true);
 
                 nanos = runCronBenchmark(generator);
                 System.out.println(
-                        String.format("[Dev.Gen] %s [%s .. %s] - %d nsec",
+                        String.format("[Opt.Gen] %s [%s .. %s] - %d nsec",
                                 schedule,
                                 data[1],
                                 fmt.format(generator.last()),
@@ -35,12 +35,12 @@ public class GeneratorBench
                 );
             }
             {
-                com.habr.cron.opt.Schedule cron = new com.habr.cron.opt.Schedule(schedule);
+                com.habr.cron.dev.Schedule cron = new com.habr.cron.dev.Schedule(schedule);
                 ScheduleEventsGenerator generator = cron.getEventsGenerator(date, true);
 
                 nanos = runCronBenchmark(generator);
                 System.out.println(
-                        String.format("[Opt.Gen] %s [%s .. %s] - %d nsec",
+                        String.format("[Dev.Gen] %s [%s .. %s] - %d nsec",
                                 schedule,
                                 data[1],
                                 fmt.format(generator.last()),
@@ -76,7 +76,7 @@ public class GeneratorBench
 
             {"*:*:*.100-200,400-600", "01.01.2021 00:00:00.000"},
             {"*:*:*.100-200/10,400-600/10", "01.01.2021 00:00:00.000"},
-            {"*:*:*.100-200,150-160", "01.01.2021 00:00:00.000"}, //will converted to single interval
-            {"*:*:*.100-101,150-151", "01.01.2021 00:00:00.000"},
+            {"*:*:*.100-200,150-160", "01.01.2021 00:00:00.000"}, //opt will use IntervalMatcher after optimize
+            {"*:*:*.100-101,150-151", "01.01.2021 00:00:00.000"}, //opt will use HashMapMatcher
     };
 }
