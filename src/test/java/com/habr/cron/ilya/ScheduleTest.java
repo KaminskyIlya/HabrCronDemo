@@ -655,4 +655,28 @@ public class ScheduleTest
                 },
         };
     }
+
+
+    @Test
+    public void testSmallRangeForMillisMustUseBitMap() throws Exception
+    {
+        SimpleDateFormat f = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS");
+        f.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Date start = f.parse("01.01.2021 00:00:00.000");
+
+        Schedule schedule = new Schedule("*:*:*.100-101,150-151");
+        Date actual = start;
+
+        for (int i = 0; i < 100000; i++)
+        {
+            actual = schedule.NextEvent(actual);
+        }
+
+        Date expected = f.parse("01.01.2021 06:56:39.151");
+        assertEquals(actual, expected,
+                "\n" +
+                        f.format(expected) + " <- expected" +
+                        "\n" +
+                        f.format(actual) + " <- actual ");
+    }
 }

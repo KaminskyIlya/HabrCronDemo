@@ -9,6 +9,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
+import static com.habr.cron.ilya.HashMapMatcher.NO_NEXT_VALUE;
+import static com.habr.cron.ilya.HashMapMatcher.NO_PREV_VALUE;
 import static org.testng.Assert.*;
 
 /**
@@ -165,13 +167,13 @@ public class HashMapMatcherTest
                 {24, 27},
                 {25, 27},
                 {26, 27},
-                {27, 127},
-                {28, 127},
-                {29, 127},
-                {30, 127},
-                {31, 127},
-                {32, 127},
-                {1000, 127},
+                {27, NO_NEXT_VALUE},
+                {28, NO_NEXT_VALUE},
+                {29, NO_NEXT_VALUE},
+                {30, NO_NEXT_VALUE},
+                {31, NO_NEXT_VALUE},
+                {32, NO_NEXT_VALUE},
+                {1000, NO_NEXT_VALUE},
         };
     }
 
@@ -189,9 +191,9 @@ public class HashMapMatcherTest
     {
         // value, expected result
         return new Object[][]{
-                {-1, -1},
-                {0, -1},
-                {1, -1},
+                {-1, NO_PREV_VALUE},
+                {0, NO_PREV_VALUE},
+                {1, NO_PREV_VALUE},
                 {2, 1},
                 {3, 2},
                 {4, 2},
@@ -267,6 +269,30 @@ public class HashMapMatcherTest
         matcher.addRange(21, 31, 2);
         matcher.finishRange();
         assertEquals(matcher.getLow(null), 2);
+    }
+
+
+    @Test
+    public void testLongRanges() throws Exception
+    {
+        HashMapMatcher matcher = new HashMapMatcher(100, 151);
+        matcher.addRange(100, 101, 1);
+        matcher.addRange(150, 151, 1);
+        matcher.finishRange();
+        assertEquals(matcher.getLow(null), 100);
+        assertEquals(matcher.getHigh(null), 151);
+
+        assertEquals(matcher.getMajor(99, null), 100);
+        assertEquals(matcher.getMajor(100, null), 101);
+        assertEquals(matcher.getMajor(101, null), 150);
+        assertEquals(matcher.getMajor(150, null), 151);
+        assertEquals(matcher.getMajor(151, null), NO_NEXT_VALUE);//overflow
+
+        assertEquals(matcher.getMinor(152, null), 151);
+        assertEquals(matcher.getMinor(151, null), 150);
+        assertEquals(matcher.getMinor(150, null), 101);
+        assertEquals(matcher.getMinor(101, null), 100);
+        assertEquals(matcher.getMinor(100, null), NO_PREV_VALUE); //overflow
     }
 
 
