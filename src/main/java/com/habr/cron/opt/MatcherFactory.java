@@ -83,14 +83,15 @@ class MatcherFactory
 
         // different intervals with and without steps requires different algo
         DigitMatcher list = ranges.isSimpleIntervals() ?
-                new ListOfIntervalsMatcher(ranges.getCount())
+                new ListOfIntervalsMatcher(min, max, ranges.getCount())
             :
-                new ListOfRangesMatcher(ranges.getCount());
+                new ListOfRangesMatcher(min, max, ranges.getCount());
 
         setRanges((MapMatcher) list, ranges);
 
+        return list;
         // run real speed benchmarks
-        return selectBestMatcher(bits, list);
+        //return selectBestMatcher(bits, list);
     }
 
 
@@ -104,7 +105,7 @@ class MatcherFactory
     }
 
 
-    private static DigitMatcher selectBestMatcher(DigitMatcher bits, DigitMatcher list)
+   /* private static DigitMatcher selectBestMatcher(DigitMatcher bits, DigitMatcher list)
     {
         float listMatchTime = measureMatch(list);
         float listSearchTime = measureSearch(list);
@@ -141,5 +142,5 @@ class MatcherFactory
         long n2 = System.nanoTime();
 
         return ((float)(n2 - n1)) / (high - low + 1);
-    }
+    }*/
 }

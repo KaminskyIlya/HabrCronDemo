@@ -17,61 +17,18 @@ package com.habr.cron.opt;
  * The concept was suggested by the user @mayorovp in
  * https://habr.com/ru/post/589667/comments/#comment_23717693
  */
-class ListOfRangesMatcher implements DigitMatcher, MapMatcher
+class ListOfRangesMatcher extends ListsMatcher
 {
     /**
-     * Arrays of intervals bounds
+     * Steps for intervals
      */
-    private final int[] min;
-    private final int[] max;
     private final int[] step;
 
-    private int low = -1; // minimal & maximal allowed values according the schedule
-    private int high = 1001; // MUST initialized in finishRange()
 
-    private static final int NOT_FOUND = -1; // index not existing interval
-    private static final int FIRST = 0; // index of first interval
-    private final int LAST; // index of last interval
-
-
-    public ListOfRangesMatcher(int count)
+    public ListOfRangesMatcher(int min, int max, int count)
     {
-        LAST = count-1;
-        min = new int[count];
-        max = new int[count];
+        super(min, max, count);
         step = new int[count];
-    }
-
-
-    /**
-     * Trying to search the interval that contains a value
-     *
-     * @return index of interval or -1 (NOT_FOUND)
-     */
-    private int search(int value)
-    {
-        // use binary search algorithm
-        int left = NOT_FOUND, right = LAST;
-        while (left < right)
-        {
-            int i = (left + right + 1)/2; // probe this index
-
-            if ( min[i] <= value )
-                left = i;
-
-            else
-                right = i-1;
-        }
-        return left;
-    }
-
-    public boolean match(int value)
-    {
-        int index = search(value);
-
-        return index != NOT_FOUND
-                && value <= max[index]
-                && (value - min[index]) % step[index] == 0;
     }
 
 
@@ -115,45 +72,9 @@ class ListOfRangesMatcher implements DigitMatcher, MapMatcher
     }
 
 
-
-    public boolean isAbove(int value)
-    {
-        return value > high;
-    }
-
-    public boolean isBelow(int value)
-    {
-        return value < low;
-    }
-
-    public boolean hasNext(int value)
-    {
-        return value < high;
-    }
-
-    public boolean hasPrev(int value)
-    {
-        return value > low;
-    }
-
-    public int getLow()
-    {
-        return low;
-    }
-
-    public int getHigh()
-    {
-        return high;
-    }
-
-
-
-
-
-    private int top = FIRST;
-
     /**
      * Intervals MUST be ordered in ascending and not be intersects!
+     * Some intervals may have step > 1.
      *
      * @param from begin value (include)
      * @param to end value (include)
@@ -161,22 +82,7 @@ class ListOfRangesMatcher implements DigitMatcher, MapMatcher
      */
     public void addRange(int from, int to, int dist)
     {
-        assert top <= LAST; // overflow protected
-
-        min[top] = from;
-        max[top] = to - (to - from)%dist;
+        super.addRange(from, to - (to - from) % dist, dist);
         step[top] = dist;
-        top++;
-    }
-
-    public void finishRange()
-    {
-        low = min[FIRST];
-        high = max[LAST];
-    }
-
-    public void addValue(int value)
-    {
-        throw new UnsupportedOperationException(); // a single constant not supported
     }
 }

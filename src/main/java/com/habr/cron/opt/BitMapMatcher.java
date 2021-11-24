@@ -15,7 +15,7 @@ package com.habr.cron.opt;
  *
  *  Maximum loop are: 17 (through long) + 63 (through bits)
  */
-class BitMapMatcher implements DigitMatcher, com.habr.cron.opt.MapMatcher
+class BitMapMatcher implements DigitMatcher, MapMatcher
 {
     private final int min; // the boundaries of calendar's element
     private final int max;
@@ -148,18 +148,6 @@ class BitMapMatcher implements DigitMatcher, com.habr.cron.opt.MapMatcher
     {
         low = match(min) ? min : getNext(min);
         high = match(max) ? max : getPrev(max);
-
-//        low = min - 1;
-//        for (int i = min; i < max && low < min; i++)
-//        {
-//            if ( match(i) ) low = i;
-//        }
-//
-//        high = max + 1;
-//        for (int i = max; i >= min && high > max; i--)
-//        {
-//            if ( match(i) ) high = i;
-//        }
     }
 
     public void addValue(int value)

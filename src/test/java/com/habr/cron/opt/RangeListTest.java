@@ -94,6 +94,12 @@ public class RangeListTest
     {
         {
             RangeList ranges = new RangeList(2); // not intersects, with step
+            ranges.add(new Range(3, 5));
+            ranges.add(new Range(100, 600, 3));
+            assertFalse(ranges.isSimpleIntervals());
+        }
+        {
+            RangeList ranges = new RangeList(2); // not intersects, with step
             ranges.add(new Range(1, 10));
             ranges.add(new Range(11, 12, 3));
             assertFalse(ranges.isSimpleIntervals());

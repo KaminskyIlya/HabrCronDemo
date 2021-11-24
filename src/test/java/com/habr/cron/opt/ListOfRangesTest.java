@@ -14,7 +14,7 @@ public class ListOfRangesTest
     public void setUp() throws Exception
     {
         // 1-10,12-18,21-30,41-50
-        list = new ListOfIntervalsMatcher(4);
+        list = new ListOfIntervalsMatcher(1, 50, 4);
         list.addRange(1, 10, 1);
         list.addRange(12, 18, 1);
         list.addRange(21, 30, 1);
@@ -117,7 +117,7 @@ public class ListOfRangesTest
     @Test
     public void testSteppedRanges() throws Exception
     {
-        ListOfRangesMatcher list = new ListOfRangesMatcher(4);
+        ListOfRangesMatcher list = new ListOfRangesMatcher(1, 60, 4);
         list.addRange(1, 10, 2);  //1,3,5,7,9
         list.addRange(12, 18, 3); //12,15,18
         list.addRange(21, 30, 4); //21,25,29
@@ -160,7 +160,29 @@ public class ListOfRangesTest
     @Test
     public void testSpecialCase() throws Exception
     {
-        ListOfIntervalsMatcher matcher = new ListOfIntervalsMatcher(1);
+        ListOfIntervalsMatcher matcher = new ListOfIntervalsMatcher(1, 10, 1);
+        matcher.addRange(5, 5, 1);
+        matcher.finishRange();
+
+        assertTrue(matcher.match(5));
+        assertFalse(matcher.match(4));
+        assertFalse(matcher.match(6));
+
+        assertEquals(matcher.getNext(3), 5);
+        assertTrue(matcher.hasNext(3));
+
+        assertEquals(matcher.getNext(4), 5);
+        assertTrue(matcher.hasNext(4));
+
+        assertEquals(matcher.getNext(5), 6);
+        assertFalse(matcher.hasNext(5));
+
+        assertEquals(matcher.getNext(6), 7);
+        assertFalse(matcher.hasNext(6));
+
+
+
+        matcher = new ListOfIntervalsMatcher(5, 5, 1);
         matcher.addRange(5, 5, 1);
         matcher.finishRange();
 
