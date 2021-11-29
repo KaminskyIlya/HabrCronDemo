@@ -50,6 +50,12 @@ public class MatcherFactoryTest
         assertEquals(matcher.getClass(), HashMapMatcher.class);
 
         ranges = new RangeList(2);
+        ranges.add(new Range(0, 20));
+        ranges.add(new Range(30, 63));
+        matcher = MatcherFactory.createInstance(ranges, MILLIS);
+        assertEquals(matcher.getClass(), HashMapMatcher.class);
+
+        ranges = new RangeList(2);
         ranges.add(new Range(100, 200));
         ranges.add(new Range(150, 300));
         matcher = MatcherFactory.createInstance(ranges, MILLIS);

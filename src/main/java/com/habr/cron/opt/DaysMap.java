@@ -78,7 +78,7 @@ class DaysMap
     /**
      * Checks whether the weekdays map contains the specified bit
      *
-     * @param bit to test
+     * @param bit to test (0..6)
      * @return <b>true</b>, if contains
      */
     public boolean contains(int bit)

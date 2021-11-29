@@ -95,7 +95,8 @@ class ScheduleModel
     }
 
     /**
-     * Makes some fixes in model for compatibility with Java's Calendar
+     * Makes some fixes in model for compatibility with Java's Calendar.
+     * Calls after check().
      */
     public void fixup()
     {
