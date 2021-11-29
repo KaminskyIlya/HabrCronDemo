@@ -7,7 +7,7 @@ package com.habr.cron.opt;
  * Used if a small set of ranges is specified (not over 8).
  *
  * Difficulty:
- *  matching one value - O(log n)
+ *  matching one value - O(1)
  *  find nearest value - O(log n)
  * Used memory:
  *  72 bytes maximum, 16 bytes minimum
