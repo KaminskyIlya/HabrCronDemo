@@ -16,7 +16,7 @@ import static org.testng.Assert.assertNotEquals;
  */
 public class GregCalFullTest
 {
-    @Test
+    @Test(enabled = false)
     public void testAllDays() throws Exception
     {
         TimeZone UTC = TimeZone.getTimeZone("UTC");

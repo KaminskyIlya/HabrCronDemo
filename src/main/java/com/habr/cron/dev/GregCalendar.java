@@ -7,7 +7,7 @@ import java.util.TimeZone;
  * Optimized version of Gregorian calendar system.
  * Minimalistic version.
  */
-public class GregCalendar
+class GregCalendar
 {
     public int year;
     public int month;

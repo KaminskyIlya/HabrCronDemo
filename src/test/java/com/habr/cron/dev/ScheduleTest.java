@@ -1,5 +1,6 @@
 package com.habr.cron.dev;
 
+import com.habr.cron.ScheduleEventsGenerator;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
